@@ -22,7 +22,7 @@ html {
 }
 
 body {
-    background: linear-gradient(180deg, #ced2ff, #c1c5f7);
+    background: linear-gradient(180deg, #dbdefe, #9d99ff);
 
     color: var(--text-color);
 }
@@ -38,7 +38,7 @@ section {
     left: 0;
     width: 100%;
     padding: 2rem 9%;
-    background: linear-gradient(0deg, #ced2ff, #c1c5f7);
+    background: linear-gradient(0deg, #c7ccff, #c5c9ff);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -140,7 +140,8 @@ section {
 
 .jour:hover {
     background-color: #211f5b8e;
-    color: var(--second-bg-color);
+    color: var(--bg-color);
+    
 }
 
 
@@ -172,7 +173,7 @@ section {
     position: fixed;
     bottom: 0;
     left: 0;
-    z-index: 2000;
+    z-index: 1000;
     display: flex;
     width: 100vw;
     justify-content: space-between;
@@ -196,7 +197,7 @@ section {
     border-radius: 5px;
     color: #fff;
     font-size: 16px;
-    z-index: 1000;
+    z-index: 30000;
 }
 
 .alert-success {
@@ -214,7 +215,7 @@ section {
     top: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 100;
+    z-index: 3000;
     background-color: #cccccc98;
     padding: 5rem;
     flex-direction: column;
