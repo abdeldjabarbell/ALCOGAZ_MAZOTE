@@ -22,7 +22,8 @@ html {
 }
 
 body {
-    background: var(--bg-color);
+    background: linear-gradient(180deg, #ced2ff, #c1c5f7);
+
     color: var(--text-color);
 }
 
@@ -37,7 +38,7 @@ section {
     left: 0;
     width: 100%;
     padding: 2rem 9%;
-    background: var(--bg-color);
+    background: linear-gradient(0deg, #ced2ff, #c1c5f7);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -60,11 +61,15 @@ section {
     color: var(--text-color);
     margin-left: 4rem;
     transition: .3s;
+
 }
 
 .navbar a:hover,
 .navbar a.active {
     color: var(--main-color);
+    background-color: #211f5b;
+    border-radius: 10px;
+    padding: 9px;
 }
 
 #menu-icon {
@@ -164,12 +169,18 @@ section {
     color: var(--second-bg-color);
 }
 .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 2000;
     display: flex;
+    width: 100vw;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     padding: 1rem;
-    background: var(--second-bg-color);
+    background: linear-gradient(45deg, #211f5b, #211f5be9);
+
 }
 
 .footer-text p {
@@ -383,8 +394,6 @@ th {
     height: auto;
     animation: growAndShrink 2s infinite;
 } 
-
-
 
 
 
