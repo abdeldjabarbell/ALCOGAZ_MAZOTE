@@ -404,6 +404,12 @@ async function showlesResous(day_id) {
         // Construire le contenu HTML
         html += `
         <br>
+                    <br><br>
+            <br><br>
+            <br><br>
+            <br><br>
+            <br><br>
+            <br><br>
         <button id="exporttoexcelday" class="greenbtn">تصدير الى اكسل  </button>
         <button id="returnToHomeConDay" class="redbutton">العودة إلى الصفحة الرئيسية</button>
         <br> <br><br>
@@ -529,7 +535,14 @@ async function showlesResous(day_id) {
                 </tbody>
             </table>
             <br><br>
-            `;
+            <br><br>
+            <br><br>
+            <br><br>
+            <br><br>
+            <br><br>
+            <br><br>
+            <br><br>
+             `;
         } else {
             // Gérer le cas où le document n'existe pas
             console.log("Document not found!");
@@ -575,13 +588,17 @@ function exportToExcel(datestart) {
 
     // Fusionner les données en une seule feuille
     const combinedData = [
-        ['Début de journée'],
+        [],
+        ['معلومات بداية اليوم '],
         ...dayStartData,
         [],
-        ['Consommations'],
+        [],
+
+        ['نتاءىج استهلاك البنزين اليومي '],
         ...consumptionData,
         [],
-        ['Fin de journée'],
+        [],
+        ['معلومات نهاية اليوم '],
         ...dayEndData
     ];
 
