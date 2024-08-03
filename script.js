@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, getDocs, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, getDocs,getDoc, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
 
 // Configuration Firebase
@@ -227,11 +227,15 @@ async function afficherlesjourshomepage() {
                         divday.addEventListener('click', () => {
                             showConsumptionForm(day_id);
                         });
-
                     }
+
                     if (statut === "fin") {
                         divday.className = "jour";
                         watingpage.style.display = "none";
+
+                        divday.addEventListener('click', () => {
+                            showlesResous(day_id);
+                        });
                     }
                     const divdayp = document.createElement("p");
                     divdayp.innerHTML = formattedDate;
@@ -286,7 +290,7 @@ function showConsumptionForm(day_id) {
     loadDrivers();
 }
 
-async function loadDrivers() {
+async function loadDrivers() { 
     const driverSelect = document.getElementById('driverSelect');
     driverSelect.innerHTML = '<option value="" selected disabled>----- ---- </option>';
 
@@ -296,7 +300,7 @@ async function loadDrivers() {
             const driver = doc.data();
             const option = document.createElement('option');
             option.value = doc.id;
-            option.textContent = `${driver.name} ${driver.surname}`;
+            option.textContent = `${driver.name} ${driver.surname} -  ${driver.matricule}`;
             driverSelect.appendChild(option);
         });
     } catch (error) {
@@ -369,4 +373,297 @@ async function endDay(day_id) {
         console.error("Error ending day:", error);
         showAlert('خطأ أثناء إيقاف اليوم', 'error');
     }
+}
+
+
+
+async function showlesResous(day_id) {
+    watingpage.style.display = "flex";
+    nvelement.style.display = "flex";
+    const element = document.getElementById('element');
+
+    if (!element) {
+        console.error("Element with id 'element' not found.");
+        return;
+    }
+    let html = ``;
+
+    // Récupérer le snapshot de la collection "dayStart" avec l'identifiant "day_id"
+    const consumptionsSnap = await getDoc(doc(db, "dayStart", day_id));
+
+    // Vérifier si le document existe
+    if (consumptionsSnap.exists()) {
+        // Obtenir les données du document
+        const dataDayStartEnd = consumptionsSnap.data();
+    
+        // Extraire les valeurs spécifiques
+        const gstart = dataDayStartEnd.initialGorge;
+        const cstart = dataDayStartEnd.initialConteur;
+        const datestart = dataDayStartEnd.startedAt;
+
+        // Construire le contenu HTML
+        html += `
+        <br>
+        <button id="exporttoexcelday" class="greenbtn">تصدير الى اكسل  </button>
+        <button id="returnToHomeConDay" class="redbutton">العودة إلى الصفحة الرئيسية</button>
+        <br> <br><br>
+        <div class="ligne"></div>
+        <br><br>
+        <br>
+        <h2> معلومات بداية اليوم  </h2>
+        <table id="dayStartTable">
+            <thead>
+                <tr>
+                    <th>قيمة العداد بداية اليوم</th>
+                    <th>لجورج بداية اليوم</th>
+                    <th> الوقت   </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${cstart}</td>
+                    <td>${gstart}</td>
+                    <td>${formatDate(datestart)}</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        `;
+    } else {
+        // Gérer le cas où le document n'existe pas
+        console.log("Document not found!");
+    }
+
+    html += `
+    <br>
+    <h2> نتاءىج استهلاك البنزين اليومي  </h2>
+
+    <table id="consumptionTable">
+        <thead>
+            <tr>
+                <th>الاسم</th>
+                <th>اللقب</th>
+                <th>الرمز</th>
+                <th>الاستهلاك (لترات)</th>
+                <th>تاريخ الاستهلاك</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+    try {
+        const driversSnapshot = await getDocs(collection(db, "drivers"));
+        const consumptionsSnapshot = await getDocs(collection(db, "dayStart", day_id, "consommations"));
+
+        const driverMap = {};
+
+        driversSnapshot.forEach((doc) => {
+            const driver = doc.data();
+            driverMap[doc.id] = {
+                name: driver.name,
+                surname: driver.surname,
+                matricule: driver.matricule,
+                consumption: 0,
+                consumptionDate: null
+            };
+        });
+
+        consumptionsSnapshot.forEach((doc) => {
+            const consumption = doc.data();
+
+            if (driverMap[consumption.driverId]) {
+                driverMap[consumption.driverId].consumption += consumption.amount;
+                driverMap[consumption.driverId].consumptionDate = consumption.timestamp;
+            }
+        });
+
+        Object.values(driverMap).forEach(driver => {
+            if (driver.consumption !== 0) {
+                html += `
+                <tr>
+                    <td>${driver.name}</td>
+                    <td>${driver.surname}</td>
+                    <td>${driver.matricule}</td>
+                    <td>${driver.consumption}</td>
+                    <td>${driver.consumptionDate ? formatDate(driver.consumptionDate) : ''}</td>
+                </tr>
+                `;
+            }
+        });
+
+        html += `
+        </tbody>
+    </table>
+    `;
+
+        // Vérifier si le document existe
+        if (consumptionsSnap.exists()) {
+            // Obtenir les données du document
+            const dataDayStartEnd = consumptionsSnap.data();
+        
+            const gend = dataDayStartEnd.endGorge;
+            const cend = dataDayStartEnd.endConteur;
+            const timeend = dataDayStartEnd.endedAt;
+
+        
+            // Construire le contenu HTML
+            html += `
+            <br>
+            <h2> معلومات نهاية اليوم  </h2>
+            <table id="dayEndTable">
+                <thead>
+                    <tr>
+                        <th>قيمة العداد بداية اليوم</th>
+                        <th>لجورج بداية اليوم</th>
+                         <th> الوقت</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+
+                        <td>${cend}</td>
+                        <td>${gend}</td>
+                        <td>${formatDate(timeend)}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br><br>
+            `;
+        } else {
+            // Gérer le cas où le document n'existe pas
+            console.log("Document not found!");
+        }
+        watingpage.style.display = "none";
+
+        element.innerHTML = html;
+        element.classList.remove('hidden');
+
+        const returnToHomeConDay = document.getElementById('returnToHomeConDay');
+        const exporttoexcelday = document.getElementById('exporttoexcelday');
+
+        returnToHomeConDay.addEventListener('click', () => {
+            element.innerHTML = "";
+            nvelement.style.display = "none";
+        });
+
+        exporttoexcelday.addEventListener('click', () => {
+            const dataDayStartEnd = consumptionsSnap.data();
+            const datestart = dataDayStartEnd.startedAt;
+            watingpage.style.display="flex";
+            exportToExcel(datestart);
+        });
+
+    } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        showAlert('Erreur lors du chargement du tableau de bord', 'error');
+    }
+}
+
+function exportToExcel(datestart) {
+    const workbook = XLSX.utils.book_new();
+
+    // Obtenir les données des tables
+    const dayStartTable = document.getElementById('dayStartTable');
+    const consumptionTable = document.getElementById('consumptionTable');
+    const dayEndTable = document.getElementById('dayEndTable');
+
+    // Convertir les tables en JSON
+    const dayStartData = XLSX.utils.sheet_to_json(XLSX.utils.table_to_sheet(dayStartTable), { header: 1 });
+    const consumptionData = XLSX.utils.sheet_to_json(XLSX.utils.table_to_sheet(consumptionTable), { header: 1 });
+    const dayEndData = XLSX.utils.sheet_to_json(XLSX.utils.table_to_sheet(dayEndTable), { header: 1 });
+
+    // Fusionner les données en une seule feuille
+    const combinedData = [
+        ['Début de journée'],
+        ...dayStartData,
+        [],
+        ['Consommations'],
+        ...consumptionData,
+        [],
+        ['Fin de journée'],
+        ...dayEndData
+    ];
+
+    // Créer une nouvelle feuille de calcul avec les données combinées
+    const combinedSheet = XLSX.utils.aoa_to_sheet(combinedData);
+
+    // Formater les dates et heures dans les cellules appropriées
+    formatSheetDates(combinedSheet, combinedData);
+
+    // Ajouter des styles aux cellules
+    applyStyles(combinedSheet, combinedData);
+
+    // Ajouter la feuille au classeur
+    XLSX.utils.book_append_sheet(workbook, combinedSheet, 'Rapport quotidien');
+
+    const dateTodayForFile = formatDateFichiet(datestart);
+
+    // Exportation du fichier
+    XLSX.writeFile(workbook, 'Rapport_Daily_mazot_' + dateTodayForFile + '.xlsx');
+    watingpage.style.display = "none";
+}
+
+function formatSheetDates(sheet, data) {
+    const dateColumns = [2, 4]; // Colonnes contenant les dates (ajustez selon vos données)
+
+    for (let R = 1; R < data.length; R++) {
+        for (let C of dateColumns) {
+            if (sheet[XLSX.utils.encode_cell({r: R, c: C})]) {
+                const cell = sheet[XLSX.utils.encode_cell({r: R, c: C})];
+                const date = new Date(cell.v);
+                cell.t = 'd';
+                cell.z = 'yyyy-mm-dd hh:mm:ss';
+                cell.v = date;
+            }
+        }
+    }
+}
+
+function applyStyles(sheet, data) {
+    const range = XLSX.utils.decode_range(sheet['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = {c: C, r: R};
+            const cellRef = XLSX.utils.encode_cell(cellAddress);
+            if (!sheet[cellRef]) continue;
+            sheet[cellRef].s = {
+                border: {
+                    top: { style: "thin", color: { rgb: "000000" } },
+                    bottom: { style: "thin", color: { rgb: "000000" } },
+                    left: { style: "thin", color: { rgb: "000000" } },
+                    right: { style: "thin", color: { rgb: "000000" } }
+                },
+                fill: {
+                    fgColor: { rgb: (R === 0 || data[R][0] === '') ? "FFFF00" : "FFFFFF" }
+                }
+            };
+        }
+        
+    }
+}
+
+
+
+
+
+function formatDateFichiet (datestart) {
+    const date = datestart.toDate();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}_${month}_${year}`;
+}
+
+
+
+
+function formatDate(timestamp) {
+    const date = timestamp.toDate();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day} / ${month} / ${year}    ${hours}:${minutes}`;
 }
